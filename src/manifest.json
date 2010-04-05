@@ -1,0 +1,10 @@
+{
+  "type": "standalone",
+  "CoreletLibrary": "@ServiceLibrary@",
+    "strings": { 
+      "en": { 
+          "title": "Log Access", 
+          "summary": "Lets you share BrowserPlus's logs with websites to help figure out upload or attachment problems you're having on the web site."
+      }
+    }
+  }

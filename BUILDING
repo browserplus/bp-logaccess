@@ -1,0 +1,13 @@
+how to build:
+ 
+ git submodule init
+ git submodule update
+ cd src
+ rm -rf build && mkdir build && cd build
+ cmake ..  (cmake -G "Visual Studio 9 2008" .. on Windows)
+ make  (devenv DirectoryService.sln on Windows)
+ 
+A dir LogAccess should be generated which is your service ready to 
+be installed using the BrowserPlus SDK:
+ 
+http://browserplus.yahoo.com/developer/service/sdk/
