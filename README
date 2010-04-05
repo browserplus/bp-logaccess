@@ -1,0 +1,6 @@
+The BrowserPlus LogAccess service allows a webpage to access
+BrowserPlus run logs and is intended to help developers build
+better tools to diagnose problems in BrowserPlus.
+
+This service is currently site locked to yahoo.com, but may be 
+opened up in some form in the future given demand.
