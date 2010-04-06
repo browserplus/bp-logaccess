@@ -69,7 +69,7 @@ LINK_DIRECTORIES(
   "${CMAKE_CURRENT_SOURCE_DIR}/../external/build/lib/${BUILD_TYPE}"
 )
  
-SET(SRCS service.cpp)
+SET(SRCS service.cpp la_util.hh la_util.cpp)
 
 # Pre-build step, build our externals
 #

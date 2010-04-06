@@ -19,9 +19,11 @@
  * Contributor(s): 
  * ***** END LICENSE BLOCK ***** */
 
+#include "la_util.hh"
 #include "bpservice/bpservice.h"
 #include "bpservice/bpcallback.h"
 #include "bp-file/bpfile.h"
+
 #include <map>
 
 #if defined(WIN32)
@@ -62,10 +64,14 @@ void
 LogAccess::get(const Transaction& tran, 
                 const bplus::Map& args)
 {
-    bplus::Map results;
-    results.add("success", new bplus::Bool(true));
-    results.add("todo", new bplus::String("write me"));
-    tran.complete(results);
+    std::string error;
+    bplus::List paths;
+    
+    error = la::util::getLogfilePaths(paths);
+
+    if (!error.empty()) {
+        tran.error("bp.couldntGetLogs", error.c_str());
+    } else {
+        tran.complete(paths);
+    }
 }
-
-
