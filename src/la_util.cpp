@@ -151,12 +151,22 @@ la::util::getLogfilePaths(bplus::List & paths)
             for (bp::file::tRecursiveDirIter rdit(*it); rdit != end; ++rdit) {
                 
                 if (!rdit->filename().compare("BrowserPlusCore.log")) {
-                    std::time_t curWrite = boost::filesystem::last_write_time(*rdit);
-                    if (curWrite > lastWrite)
-                    {
-                        curWrite = lastWrite;
-                        logDir = rdit->path();
-                        logDir.remove_filename();
+                    try {
+                        std::time_t curWrite = boost::filesystem::last_write_time(*rdit);
+                        if (curWrite > lastWrite)
+                        {
+                            curWrite = lastWrite;
+                            logDir = rdit->path();
+                            logDir.remove_filename();
+                        }
+                    } catch (const bp::file::tFileSystemError& e) {
+                        // error reading timestamp of this file!  if no other
+                        // BrowserPlusCore.log files have been found, we'll
+                        // assume this is our guy.
+                        if (logDir.empty()) {
+                            logDir = rdit->path();                        
+                            logDir.remove_filename();
+                        }
                     }
                 }
             }
