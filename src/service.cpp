@@ -23,6 +23,7 @@
 #include "bpservice/bpservice.h"
 #include "bpservice/bpcallback.h"
 #include "bp-file/bpfile.h"
+#include "bputil/bpurl.h"
 
 #include <map>
 
@@ -60,18 +61,62 @@ ADD_BP_METHOD(LogAccess, get,
 END_BP_SERVICE_DESC
 
 
+static bool checkWhitelist(const std::string & sUrl) 
+{
+    bplus::url::Url pUrl;
+    if (!pUrl.parse(sUrl)) {
+        return false;
+    }
+    
+    if (pUrl.scheme() != "http" && pUrl.scheme() != "https") {
+        return false;
+    }
+    std::vector<std::string> whitelist;
+    whitelist.push_back("browserplus.org");
+    whitelist.push_back("browserpl.us");
+    whitelist.push_back("yahoo.com");    
+
+    for (unsigned int i = 0; i < whitelist.size(); i++) {
+        if (whitelist[i].length() > pUrl.host().length()) {
+            continue;
+        }
+
+        // if the hostname is larger than the whitelist entry it must
+        // have a separator (so suckbrowserplus.org isn't whitelisted
+        // for browserplus.org entry)
+        if (whitelist[i].length() < pUrl.host().length() &&
+            '.' != pUrl.host()[pUrl.host().length() - whitelist[i].length() - 1])
+        {
+            continue;
+        }
+        
+        if (!pUrl.host().substr(pUrl.host().length() - whitelist[i].length(),
+                                whitelist[i].length()).compare(whitelist[i]))
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+
 void
 LogAccess::get(const Transaction& tran, 
                 const bplus::Map& args)
 {
     std::string error;
     bplus::List paths;
-    
-    error = la::util::getLogfilePaths(paths);
 
-    if (!error.empty()) {
-        tran.error("bp.couldntGetLogs", error.c_str());
+    if (!checkWhitelist(context("uri")) ) {
+        tran.error("bp.permissionDenied", NULL);
     } else {
-        tran.complete(paths);
+        error = la::util::getLogfilePaths(paths);
+
+        if (!error.empty()) {
+            tran.error("bp.couldntGetLogs", error.c_str());
+        } else {
+            tran.complete(paths);
+        }
     }
 }
