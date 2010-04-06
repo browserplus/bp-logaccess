@@ -26,7 +26,16 @@
 #include <list>
 
 #ifdef WINDOWS
+
+#include <atlpath.h>
+#include <iostream>
+#include <ShellApi.h>
+#include <shlobj.h>
+#include <sstream>
 #include <windows.h>
+
+#include <windows.h>
+#include <ShellApi.h>
 #elif defined(MACOSX)
 #include <CoreFoundation/CoreFoundation.h>
 #include <CoreServices/CoreServices.h>
@@ -57,7 +66,50 @@ stringRefToUTF8(CFStringRef cfStr)
     return rval;
 }
 #endif
+#ifdef WINDOWS
 
+
+static std::string PlatformVersion()
+{
+    std::string version;
+
+    char buf [1024];
+        OSVERSIONINFOEX osvi;
+        ZeroMemory(&osvi,sizeof(OSVERSIONINFOEX));
+        ZeroMemory(&buf,sizeof(buf));
+        osvi.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEX);
+        if(!GetVersionEx((OSVERSIONINFO*)&osvi))
+        {
+                osvi.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
+                if(!GetVersionEx((OSVERSIONINFO*)&osvi)) {
+                        return std::string("unknown");
+        }
+    }
+    snprintf(buf, sizeof(buf), "%lu.%lu.%lu",
+             osvi.dwMajorVersion, osvi.dwMinorVersion, osvi.dwBuildNumber);
+    version.append(buf);
+	return version;
+}
+
+static bool 
+getCSIDL(bp::file::Path & path, int csidl)
+{
+    wchar_t wcPath[MAX_PATH] = {0};
+    HRESULT bStatus = SHGetFolderPathW(NULL,
+                                       csidl | CSIDL_FLAG_CREATE,
+                                       NULL,
+                                       SHGFP_TYPE_DEFAULT,
+                                       wcPath);
+    if (bStatus != S_OK) {
+        return false;
+    }
+
+    path = wcPath;
+
+    return true;
+}
+
+#endif
 // get a list paths pointing at current logfiles
 std::string
 la::util::getLogfilePaths(bplus::List & paths)
@@ -75,17 +127,17 @@ la::util::getLogfilePaths(bplus::List & paths)
     // a. first let's find the user scoped "plugin writable" path.
     bp::file::Path pluginWriteDir;
 #ifdef WINDOWS
-    bool isVistaOrLater = (osVersion.compare("6") >= 0);
+    bool isVistaOrLater = (PlatformVersion().compare("6") >= 0);
     if (isVistaOrLater) {
-        // TODO: using above requires Vista SDK, so we'll manually
-        //       build up the LocalLow path (YIB-1623201)
-        // (lth) isn't there a way we can make a runtime switch to use
-        //       the vista call if present?
-        pluginWriteDir = getCSIDL(CSIDL_LOCAL_APPDATA);
+		if (!getCSIDL(pluginWriteDir, CSIDL_LOCAL_APPDATA)) {
+            return std::string("couldn't determine windows AppData directory");
+		}
         pluginWriteDir.remove_filename();
         pluginWriteDir /= L"LocalLow";
     } else {
-        pluginWriteDir = getCSIDL(CSIDL_LOCAL_APPDATA);
+		if (!getCSIDL(pluginWriteDir, CSIDL_LOCAL_APPDATA)) {
+			return std::string("couldn't determine winxp AppData directory");
+		}
     }
 #elif defined(MACOSX)
     // Get application support dir
@@ -129,11 +181,11 @@ la::util::getLogfilePaths(bplus::List & paths)
             bp::file::tDirIter end;
             for (bp::file::tDirIter it(pluginWriteDir); it != end; ++it) {
                 bplus::service::Version v;
-                if (v.parse(it->filename())) {
+				if (v.parse(bp::file::Path(it->filename()).externalUtf8())) {
                     versionDirs.push_back(it->path());
                 }
             }
-        } catch (const bp::file::tFileSystemError& e) {
+        } catch (const bp::file::tFileSystemError&) {
             return std::string("unable to iterate thru plugin writable dir");
         }
     }
@@ -150,7 +202,7 @@ la::util::getLogfilePaths(bplus::List & paths)
             bp::file::tRecursiveDirIter end;
             for (bp::file::tRecursiveDirIter rdit(*it); rdit != end; ++rdit) {
                 
-                if (!rdit->filename().compare("BrowserPlusCore.log")) {
+				if (!rdit->filename().compare(bp::file::nativeFromUtf8("BrowserPlusCore.log"))) {
                     std::time_t curWrite = boost::filesystem::last_write_time(*rdit);
                     if (curWrite > lastWrite)
                     {
@@ -160,7 +212,7 @@ la::util::getLogfilePaths(bplus::List & paths)
                     }
                 }
             }
-        } catch (const bp::file::tFileSystemError& e) {
+        } catch (const bp::file::tFileSystemError&) {
             return std::string("unable to iterate thru platform version dir");
         }
     }
@@ -185,7 +237,7 @@ la::util::getLogfilePaths(bplus::List & paths)
                     }
                 }
             }
-        } catch (const bp::file::tFileSystemError& e) {
+        } catch (const bp::file::tFileSystemError&) {
             return std::string("unable to iterate thru plugin writable dir");
         }
     }
