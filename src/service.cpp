@@ -50,7 +50,7 @@ public:
     void get(const Transaction& tran, const bplus::Map& args);
 };
 
-BP_SERVICE_DESC(LogAccess, "LogAccess", "1.0.1",
+BP_SERVICE_DESC(LogAccess, "LogAccess", "1.0.2",
                 "Lets you get file handles for BrowserPlus log files "
                 "from a webpage.")
 
