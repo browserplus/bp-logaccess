@@ -1,0 +1,85 @@
+<project name="BrowserPlusLogAccess" default="build_release">
+    <condition property="is.windows">
+        <os family="windows" />
+    </condition>
+    <condition property="is.mac">
+        <os family="mac" />
+    </condition>
+    <condition property="is.unix">
+        <os family="unix" />
+    </condition>
+    <target name="update_submodule">
+        <exec executable="git" failonerror="true">
+            <arg line="submodule init" />
+        </exec>
+        <exec executable="git" failonerror="true">
+            <arg line="submodule update" />
+        </exec>
+    </target>
+    <target name="clean_make_debug" unless="is.windows">
+        <ant dir="external" target="clean_make_debug" />
+        <ant dir="src" target="clean_make_debug" />
+        <ant dir="test" target="clean_make_debug" />
+    </target>
+    <target name="clean_make_release" unless="is.windows">
+        <ant dir="external" target="clean_make_release" />
+        <ant dir="src" target="clean_make_release" />
+        <ant dir="test" target="clean_make_release" />
+    </target>
+    <target name="clean_vc08_debug" if="is.windows">
+        <ant dir="external" target="clean_vc08_debug" />
+        <ant dir="src" target="clean_vc08_debug" />
+        <ant dir="test" target="clean_vc08_debug" />
+    </target>
+    <target name="clean_vc08_release" if="is.windows">
+        <ant dir="external" target="clean_vc08_release" />
+        <ant dir="src" target="clean_vc08_release" />
+        <ant dir="test" target="clean_vc08_release" />
+    </target>
+    <target name="build_make_debug" unless="is.windows">
+        <ant dir="external" target="build_make_debug" />
+        <ant dir="src" target="build_make_debug" />
+        <ant dir="test" target="build_make_debug" />
+    </target>
+    <target name="build_make_release" unless="is.windows">
+        <ant dir="external" target="build_make_release" />
+        <ant dir="src" target="build_make_release" />
+        <ant dir="test" target="build_make_release" />
+    </target>
+    <target name="build_vc08_debug" if="is.windows">
+        <ant dir="external" target="build_vc08_debug" />
+        <ant dir="src" target="build_vc08_debug" />
+        <ant dir="test" target="build_vc08_debug" />
+    </target>
+    <target name="build_vc08_release" if="is.windows">
+        <ant dir="external" target="build_vc08_release" />
+        <ant dir="src" target="build_vc08_release" />
+        <ant dir="test" target="build_vc08_release" />
+    </target>
+    <target name="test_make_debug" unless="is.windows">
+        <ant dir="external" target="test_make_debug" />
+        <ant dir="src" target="test_make_debug" />
+        <ant dir="test" target="test_make_debug" />
+    </target>
+    <target name="test_make_release" unless="is.windows">
+        <ant dir="external" target="test_make_release" />
+        <ant dir="src" target="test_make_release" />
+        <ant dir="test" target="test_make_release" />
+    </target>
+    <target name="test_vc08_debug" if="is.windows">
+        <ant dir="external" target="test_vc08_debug" />
+        <ant dir="src" target="test_vc08_debug" />
+        <ant dir="test" target="test_vc08_debug" />
+    </target>
+    <target name="test_vc08_release" if="is.windows">
+        <ant dir="external" target="test_vc08_release" />
+        <ant dir="src" target="test_vc08_release" />
+        <ant dir="test" target="test_vc08_release" />
+    </target>
+    <target name="clean_debug" depends="clean_make_debug,clean_vc08_debug" />
+    <target name="clean_release" depends="clean_make_release,clean_vc08_release" />
+    <target name="build_debug" depends="build_make_debug,build_vc08_debug" />
+    <target name="build_release" depends="build_make_release,build_vc08_release" />
+    <target name="test_debug" depends="test_make_debug,test_vc08_debug" />
+    <target name="test_release" depends="test_make_release,test_vc08_release" />
+</project>
