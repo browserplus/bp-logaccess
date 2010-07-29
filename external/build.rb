@@ -5,8 +5,12 @@ require "bakery/ports/bakery"
 # boost is built from bakery port, bp-file is built from submodule source
 topDir = File.dirname(File.expand_path(__FILE__));
 $order = {
-  :output_dir => File.join(topDir, "build"),
-  :packages => ["boost", "bp-file"],
+  :output_dir => File.join(topDir, "dist"),
+  :packages => [
+                "boost",
+                "bp-file",
+                "service_testing"
+               ],
   :verbose => true,
   :use_source => {
         "bp-file"=>File.join(topDir, "bp-file")

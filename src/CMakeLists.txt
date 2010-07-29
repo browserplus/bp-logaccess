@@ -56,13 +56,13 @@ IF (NOT CMAKE_BUILD_TYPE)
 ENDIF ()
 
 INCLUDE_DIRECTORIES(
-  "${CMAKE_CURRENT_SOURCE_DIR}/../external/build/include"
+  "${CMAKE_CURRENT_SOURCE_DIR}/../external/dist/include"
   "${frameworkDir}/include"
 )
  
 LINK_DIRECTORIES(
-  "${CMAKE_CURRENT_SOURCE_DIR}/../external/build/lib"
-  "${CMAKE_CURRENT_SOURCE_DIR}/../external/build/lib/${CMAKE_BUILD_TYPE}"
+  "${CMAKE_CURRENT_SOURCE_DIR}/../external/dist/lib"
+  "${CMAKE_CURRENT_SOURCE_DIR}/../external/dist/lib/${CMAKE_BUILD_TYPE}"
 )
  
 SET(SRCS service.cpp la_util.hh la_util.cpp)
