@@ -37,10 +37,7 @@
 
 CMAKE_MINIMUM_REQUIRED(VERSION 2.8.1)
 
-# We use the bp-service-framework to handle the service api gunk
-#
-SET(frameworkDir "${CMAKE_CURRENT_SOURCE_DIR}/../external/bp-service-framework")
-INCLUDE(${frameworkDir}/build_support/BuildConfigs.cmake)
+INCLUDE(${CMAKE_CURRENT_SOURCE_DIR}/../external/bp-service-framework/build_support/BuildConfigs.cmake)
 
 SET(serviceName LogAccess)
 
@@ -57,7 +54,7 @@ ENDIF ()
 
 INCLUDE_DIRECTORIES(
   "${CMAKE_CURRENT_SOURCE_DIR}/../external/dist/include"
-  "${frameworkDir}/include"
+  "${CMAKE_CURRENT_SOURCE_DIR}/../external/bp-service-framework/include"
 )
  
 LINK_DIRECTORIES(
