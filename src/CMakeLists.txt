@@ -1,6 +1,6 @@
 #####
-# A CMake build file for the Directory service, a service that can
-# walk directories and invoke JS callbacks for the contained items.
+# A CMake build file for the LogAccess service.
+# 
 # 
 # Copyright 2009, Yahoo!
 # 
@@ -35,7 +35,7 @@
 # Original Author: Gordon Durand
 #####
 
-cmake_minimum_required(VERSION 2.8)
+CMAKE_MINIMUM_REQUIRED(VERSION 2.8.1)
 
 # We use the bp-service-framework to handle the service api gunk
 #
