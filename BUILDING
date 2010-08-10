@@ -2,12 +2,13 @@ how to build:
  
  git submodule init
  git submodule update
- cd src
+ cd externals && ruby build.rb && cd ..
  rm -rf build && mkdir build && cd build
- cmake ..  (cmake -G "Visual Studio 9 2008" .. on Windows)
- make  (devenv LogAcessService.sln on Windows)
+ cmake ../src (cmake -G "Visual Studio 9 2008" .. on Windows)
+ make (devenv LogAccessService.sln on Windows)
+ cd test && ruby ./runtests.rb && cd ..
  
-A dir LogAccess should be generated which is your service ready to 
+A directory LogAccess should be generated which is your service ready to 
 be installed using the BrowserPlus SDK:
  
 http://browserplus.yahoo.com/developer/service/sdk/
