@@ -1,5 +1,6 @@
 *~
 /build/
+/build_codecoverage/
 /build_debug/
 /build_release/
 /external/dist/
