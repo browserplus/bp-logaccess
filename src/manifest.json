@@ -1,6 +1,6 @@
 {
   "type": "standalone",
-  "CoreletLibrary": "@ServiceLibrary@",
+  "CoreletLibrary": "@SERVICE_LIBRARY@",
     "strings": { 
       "en": { 
           "title": "Log Access", 
