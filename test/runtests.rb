@@ -19,6 +19,8 @@ class TestLogAccess < Test::Unit::TestCase
   def teardown
   end
 
-  def test_noop
+  def test_load_service
+    BrowserPlus.run(@service) { |s|
+    }
   end
 end
