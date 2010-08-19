@@ -1,3 +1,0 @@
-<project name="test" default="build_release">
-    <import file="../external/bp-service-framework/ant/test/build.xml" as="" prefixSeparator="" />
-</project>
