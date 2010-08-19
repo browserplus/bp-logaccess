@@ -5,6 +5,8 @@ require File.join(File.dirname(File.dirname(File.expand_path(__FILE__))),
 require 'uri'
 require 'test/unit'
 require 'open-uri'
+require 'rbconfig'
+include Config
 
 class TestLogAccess < Test::Unit::TestCase
   def setup
