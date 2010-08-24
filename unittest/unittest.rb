@@ -7,6 +7,8 @@ require 'test/unit'
 require 'open-uri'
 require 'rbconfig'
 include Config
+require 'webrick'
+include WEBrick
 
 class TestLogAccess < Test::Unit::TestCase
   def setup
@@ -16,6 +18,16 @@ class TestLogAccess < Test::Unit::TestCase
     end
     @cwd = File.dirname(File.expand_path(__FILE__))
     @service = File.join(@cwd, "../#{subdir}")
+    nulldevice = "/dev/null"
+    if CONFIG['arch'] =~ /mswin|mingw/
+      nulldevice = "NUL"
+    end
+    @server = HTTPServer.new(:Port => 0,
+                             :Logger => WEBrick::Log.new(nulldevice),
+                             :AccessLog => [nil],
+                             :BindAddress => "127.0.0.1")
+    @urlLocal = "http://localhost:#{@server[:Port]}/"
+    @urlFake = "http://www.yahoo.com/fake.html"
   end
   
   def teardown
@@ -23,6 +35,63 @@ class TestLogAccess < Test::Unit::TestCase
 
   def test_load_service
     BrowserPlus.run(@service) { |s|
+    }
+  end
+
+  # BrowserPlus.LogAccess.get({params}, function{}())
+  # Returns a list in "files" of filehandles associated with BrowserPlus logfiles.
+  def test_bpnpapi_1
+    BrowserPlus.run(@service) { |s|
+      i = s.allocate(@urlLocal)
+# NEEDSWORK!!!  get() is returning PermissionDenied
+#      x = i.get()
+#      x = x[0].split('2')
+#      want = ENV["HOME"] + "/Library/Application Support/Yahoo!/BrowserPlus/"
+#      got = x[0]
+#      assert_equal(want, got)
+    }
+  end
+
+  def test_bpnpapi_2
+    BrowserPlus.run(@service) { |s|
+      i = s.allocate(@urlLocal)
+# NEEDSWORK!!!  get() is returning PermissionDenied
+#      x = i.get()
+#      x = x[0].split('/')
+#      want = "bpnpapi.log"
+#      got = x[x.size() - 1]
+#      assert_equal(want, got)
+    }
+  end
+
+  def test_BrowserPlusCore_1
+    BrowserPlus.run(@service) { |s|
+      i = s.allocate(@urlLocal)
+# NEEDSWORK!!!  get() is returning PermissionDenied
+#      x = i.get()
+#      x = x[1].split('2')
+#      want = ENV["HOME"] + "/Library/Application Support/Yahoo!/BrowserPlus/"
+#      got = x[0]
+#      assert_equal(want, got)
+    }
+  end
+
+  def test_BrowserPlusCore_2
+    BrowserPlus.run(@service) { |s|
+      i = s.allocate(@urlLocal)
+# NEEDSWORK!!!  get() is returning PermissionDenied
+#      x = i.get()
+#      x = x[1].split('/')
+#      want = "BrowserPlusCore.log"
+#      got = x[x.size() - 1]
+#      assert_equal(want, got)
+    }
+  end
+
+  def test_fakeurl
+    BrowserPlus.run(@service) { |s|
+      i = s.allocate(@urlFake)
+      assert_raise(RuntimeError) { x = i.get() }
     }
   end
 end
