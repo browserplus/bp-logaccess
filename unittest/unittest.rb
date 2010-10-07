@@ -18,6 +18,7 @@ class TestLogAccess < Test::Unit::TestCase
     end
     @cwd = File.dirname(File.expand_path(__FILE__))
     @service = File.join(@cwd, "../#{subdir}")
+    @providerDir = File.expand_path(File.join(@cwd, "providerDir"))
     nulldevice = "/dev/null"
     if CONFIG['arch'] =~ /mswin|mingw/
       nulldevice = "NUL"
@@ -34,7 +35,7 @@ class TestLogAccess < Test::Unit::TestCase
   end
 
   def test_load_service
-    BrowserPlus.run(@service) { |s|
+    BrowserPlus.run(@service, @providerDir) { |s|
     }
   end
 
@@ -42,7 +43,7 @@ class TestLogAccess < Test::Unit::TestCase
   # Returns a list in "files" of filehandles associated with BrowserPlus logfiles.
   def test_bpnpapi_1
 # NEEDSWORK!!!  get() is returning PermissionDenied
-#    s = BrowserPlus::Service.new(@service)
+#    s = BrowserPlus::Service.new(@service, @providerDir)
 #    i = s.allocate(@urlLocal)
 #    x = i.get()
 #    x = x[0].split('2')
@@ -54,7 +55,7 @@ class TestLogAccess < Test::Unit::TestCase
 
   def test_bpnpapi_2
 # NEEDSWORK!!!  get() is returning PermissionDenied
-#    s = BrowserPlus::Service.new(@service)
+#    s = BrowserPlus::Service.new(@service, @providerDir)
 #    i = s.allocate(@urlLocal)
 #    x = i.get()
 #    x = x[0].split('/')
@@ -66,7 +67,7 @@ class TestLogAccess < Test::Unit::TestCase
 
   def test_BrowserPlusCore_1
 # NEEDSWORK!!!  get() is returning PermissionDenied
-#    s = BrowserPlus::Service.new(@service)
+#    s = BrowserPlus::Service.new(@service, @providerDir)
 #    i = s.allocate(@urlLocal)
 #    x = i.get()
 #    x = x[1].split('2')
@@ -78,7 +79,7 @@ class TestLogAccess < Test::Unit::TestCase
 
   def test_BrowserPlusCore_2
 # NEEDSWORK!!!  get() is returning PermissionDenied
-#    s = BrowserPlus::Service.new(@service)
+#    s = BrowserPlus::Service.new(@service, @providerDir)
 #    i = s.allocate(@urlLocal)
 #    x = i.get()
 #    x = x[1].split('/')
@@ -89,7 +90,7 @@ class TestLogAccess < Test::Unit::TestCase
   end
 
   def test_fakeurl
-    s = BrowserPlus::Service.new(@service)
+    s = BrowserPlus::Service.new(@service, @providerDir)
     i = s.allocate(@urlFake)
     assert_raise(RuntimeError) { x = i.get() }
     s.shutdown()
