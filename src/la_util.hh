@@ -29,6 +29,10 @@ namespace la { namespace util {
 // get a list paths pointing at current logfiles
 std::string getLogfilePaths(bplus::List & paths);
 
+// get a list paths pointing at current logfiles for a service
+std::string getServiceLogfilePaths(const std::string& service,
+                                   bplus::List & paths);
+
 } }
 
 #endif

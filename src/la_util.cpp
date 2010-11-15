@@ -254,3 +254,135 @@ la::util::getLogfilePaths(bplus::List & paths)
     // success!
     return std::string();
 }
+
+
+std::string
+la::util::getServiceLogfilePaths(const std::string& service,
+                                 bplus::List& paths)
+{
+    bp::file::Path coreletDataDir;
+#ifdef WINDOWS
+    bool isVistaOrLater = (PlatformVersion().compare("6") >= 0);
+    if (isVistaOrLater) {
+		if (!getCSIDL(coreletDataDir, CSIDL_LOCAL_APPDATA)) {
+            return std::string("couldn't determine windows AppData directory");
+		}
+    } else {
+		if (!getCSIDL(coreletDataDir, CSIDL_LOCAL_APPDATA)) {
+			return std::string("couldn't determine winxp AppData directory");
+		}
+    }
+#elif defined(MACOSX)
+    // Get application support dir
+    FSRef fref;
+    OSErr err = FSFindFolder(kUserDomain, kApplicationSupportFolderType,
+                             kCreateFolder, &fref);
+    if (err == noErr) {
+        CFURLRef tmpUrl = CFURLCreateFromFSRef(kCFAllocatorSystemDefault, &fref);
+        CFStringRef ctmpDir = CFURLCopyFileSystemPath(tmpUrl, kCFURLPOSIXPathStyle);
+        coreletDataDir = stringRefToUTF8(ctmpDir);
+        CFRelease(ctmpDir);
+        CFRelease(tmpUrl);
+    } else {
+        return std::string("couldn't find user scoped application support directory");        
+    }
+#else
+#error "platforms not yet supported"
+#endif
+    if (coreletDataDir.empty()) {
+        return std::string("couldn't determine application support directory");
+    }
+
+    // append Yahoo!/BrowserPlus/CoreletData/<service>
+    coreletDataDir /= bp::file::Path("Yahoo!/BrowserPlus/CoreletData") / service;
+    if (!bp::file::isDirectory(coreletDataDir)) {
+        return std::string("");
+    }
+    
+    // Now find the latest major version with a log file.
+    //    first we'll do a non-recursive iteration to find the dirs that exist that are
+    //    well formed major versions, and we'll follow up with a pass to find *.log
+    //    inside those directories.  In case there's multiple such log files, the parent
+    //    of the newest created logfile wins
+    std::list<bp::file::Path> versionDirs;
+    {
+        bp::file::tDirIter di;
+        try {
+            bp::file::tDirIter end;
+            for (bp::file::tDirIter it(coreletDataDir); it != end; ++it) {
+                bplus::service::Version v;
+				if (v.parse(bp::file::Path(it->filename()).externalUtf8()) 
+                    && v.majorVer() != -1 && v.minorVer() == -1
+                    && v.microVer() == -1) {
+                    versionDirs.push_back(it->path());
+                }
+            }
+        } catch (const bp::file::tFileSystemError&) {
+            return std::string("unable to iterate thru CoreletData dir for service ") + service;
+        }
+    }
+    
+    // c. now that we've got the version directories, find the one with the most recent
+    //    log file
+    bp::file::tString logExt = bp::file::nativeFromUtf8(".log");
+    bp::file::Path logDir;
+    std::time_t lastWrite = 0;
+
+    std::list<bp::file::Path>::const_iterator it;
+    for (it = versionDirs.begin(); it != versionDirs.end(); it++) {
+        bp::file::tRecursiveDirIter di;
+        try {
+            bp::file::tRecursiveDirIter end;
+            for (bp::file::tRecursiveDirIter rdit(*it); rdit != end; ++rdit) {
+                if (!rdit->path().extension().compare(logExt)) {
+                    try {
+                        std::time_t curWrite = boost::filesystem::last_write_time(*rdit);
+                        if (curWrite > lastWrite) {
+                            curWrite = lastWrite;
+                            logDir = rdit->path();
+                            logDir.remove_filename();
+                        }
+                    } catch (const bp::file::tFileSystemError& e) {
+                        // error reading timestamp of this file!  if no other
+                        // .log files have been found, we'll
+                        // assume this is our guy.
+                        if (logDir.empty()) {
+                            logDir = rdit->path();                        
+                            logDir.remove_filename();
+                        }
+                    }
+                }
+            }
+        } catch (const bp::file::tFileSystemError&) {
+            return std::string("unable to iterate thru service version dir");
+        }
+    }
+
+    if (logDir.empty()) {
+        return std::string("unable to find current log directory");        
+    }
+
+    // d. now we've got what we're reasonably sure is the current logfile directory, lets'
+    //    add all .log files to the output parameter
+    {
+        bp::file::tDirIter di;
+        try {
+            bp::file::tDirIter end;
+            for (bp::file::tDirIter it(logDir); it != end; ++it)
+            {
+                if (bp::file::isRegularFile(it->path())) {
+                    if (!it->path().extension().compare(logExt)) {
+                        bp::file::Path p(it->path());
+                        paths.append(new bplus::Path(p.externalUtf8()));
+                    }
+                }
+            }
+        } catch (const bp::file::tFileSystemError&) {
+            return std::string("unable to iterate thru service data dir");
+        }
+    }
+    
+    // success!
+    return std::string();
+}
+

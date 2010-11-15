@@ -48,15 +48,24 @@ public:
     }
 
     void get(const Transaction& tran, const bplus::Map& args);
+    void getServiceLogs(const Transaction& tran,
+                        const bplus::Map& args);
 };
 
-BP_SERVICE_DESC(LogAccess, "LogAccess", "1.0.2",
+BP_SERVICE_DESC(LogAccess, "LogAccess", "1.1.0",
                 "Lets you get file handles for BrowserPlus log files "
                 "from a webpage.")
 
 ADD_BP_METHOD(LogAccess, get,
               "Returns a list in \"files\" of filehandles associated "
               "with BrowserPlus logfiles.")
+
+ADD_BP_METHOD(LogAccess, getServiceLogs,
+              "Returns a list in \"files\" of filehandles associated "
+              "with BrowserPlus service logfiles.")
+
+ADD_BP_METHOD_ARG(getServiceLogs, "services", List, true,
+                  "A list of service names whose logs are fetched.")
 
 END_BP_SERVICE_DESC
 
@@ -118,5 +127,39 @@ LogAccess::get(const Transaction& tran,
         } else {
             tran.complete(paths);
         }
+    }
+}
+
+
+void
+LogAccess::getServiceLogs(const Transaction& tran, 
+                          const bplus::Map& args)
+{
+    std::string error;
+    bplus::List paths;
+
+    if (!checkWhitelist(context("uri")) ) {
+        tran.error("bp.permissionDenied", NULL);
+    } else {
+        const bplus::List* serviceList = NULL;
+        if (!args.getList("services", serviceList)) {
+            tran.error("bp.couldntGetLogs", 
+                       "required services parameter missing");
+            return;
+        }
+
+        for (unsigned int i = 0; i < serviceList->size(); i++) {
+            const bplus::String* s =
+                dynamic_cast<const bplus::String*>(serviceList->value(i));
+            if (s) {
+                error = la::util::getServiceLogfilePaths(s->value(), paths);
+                if (!error.empty()) {
+                    tran.error("bp.couldntGetLogs", error.c_str());
+                    return;
+                }
+            }
+        }
+
+        tran.complete(paths);
     }
 }
