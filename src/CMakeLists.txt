@@ -40,7 +40,7 @@ CMAKE_MINIMUM_REQUIRED(VERSION 2.8.1)
 SET(SERVICE_NAME LogAccess)
 PROJECT(${SERVICE_NAME}Service)
 
-INCLUDE(${CMAKE_CURRENT_SOURCE_DIR}/../external/bp-service-framework/build_support/BuildConfigs.cmake)
+INCLUDE(${CMAKE_CURRENT_SOURCE_DIR}/../external/bp-build-templates/cmake/BuildConfigs.cmake)
 
 INCLUDE_DIRECTORIES(
   "${CMAKE_CURRENT_SOURCE_DIR}/../external/dist/include"
