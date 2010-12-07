@@ -7,3 +7,6 @@
 [submodule "external/bp-file"]
 	path = external/bp-file
 	url = git://github.com/browserplus/bp-file
+[submodule "external/bp-build-templates"]
+	path = external/bp-build-templates
+	url = git@bp-code.corp.yahoo.com:utility/build/bp-build-templates.git
