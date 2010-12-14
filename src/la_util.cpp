@@ -41,6 +41,9 @@
 #include <CoreServices/CoreServices.h>
 #endif
 
+namespace bpf = bp::file;
+namespace bfs = boost::filesystem;
+
 #ifdef MACOSX
 // Make a string from a CFStringRef
 //
@@ -92,7 +95,7 @@ static std::string PlatformVersion()
 }
 
 static bool 
-getCSIDL(bp::file::Path & path, int csidl)
+getCSIDL(bfs::path & path, int csidl)
 {
     wchar_t wcPath[MAX_PATH] = {0};
     HRESULT bStatus = SHGetFolderPathW(NULL,
@@ -125,7 +128,7 @@ la::util::getLogfilePaths(bplus::List & paths)
     // all that said, let's get to it
 
     // a. first let's find the user scoped "plugin writable" path.
-    bp::file::Path pluginWriteDir;
+    bfs::path pluginWriteDir;
 #ifdef WINDOWS
     bool isVistaOrLater = (PlatformVersion().compare("6") >= 0);
     if (isVistaOrLater) {
@@ -161,9 +164,9 @@ la::util::getLogfilePaths(bplus::List & paths)
     }
 
     // append Yahoo!/BrowserPlus
-    pluginWriteDir /= bp::file::Path("Yahoo!")/bp::file::Path("BrowserPlus");
+    pluginWriteDir /= bfs::path("Yahoo!")/bfs::path("BrowserPlus");
 
-    if (!bp::file::isDirectory(pluginWriteDir)) {
+    if (!bpf::isDirectory(pluginWriteDir)) {
         return std::string("logfile directory does not exist!");
     }
     
@@ -173,44 +176,42 @@ la::util::getLogfilePaths(bplus::List & paths)
     //    inside those directories.  In case there's multiple such log files, the parent
     //    of the newest created logfile wins
 
-    std::list<bp::file::Path> versionDirs;
+    std::list<bfs::path> versionDirs;
 
     {
-        bp::file::tDirIter di;
         try {
-            bp::file::tDirIter end;
-            for (bp::file::tDirIter it(pluginWriteDir); it != end; ++it) {
+            bfs::directory_iterator end;
+            for (bfs::directory_iterator it(pluginWriteDir); it != end; ++it) {
                 bplus::service::Version v;
-				if (v.parse(bp::file::Path(it->filename()).externalUtf8())) {
+				if (v.parse(it->path().filename().string())) {
                     versionDirs.push_back(it->path());
                 }
             }
-        } catch (const bp::file::tFileSystemError&) {
+        } catch (const bfs::filesystem_error&) {
             return std::string("unable to iterate thru plugin writable dir");
         }
     }
     
     // c. now that we've got the platform directories, we have to find the appropriate
     //    child path to the installation id directory where logfiles are stored
-    bp::file::Path logDir;
+    bfs::path logDir;
     std::time_t lastWrite = 0;
 
-    std::list<bp::file::Path>::const_iterator it;
+    std::list<bfs::path>::const_iterator it;
     for (it = versionDirs.begin(); it != versionDirs.end(); it++) {
-        bp::file::tRecursiveDirIter di;
         try {
-            bp::file::tRecursiveDirIter end;
-            for (bp::file::tRecursiveDirIter rdit(*it); rdit != end; ++rdit) {
-				if (!rdit->filename().compare(bp::file::nativeFromUtf8("BrowserPlusCore.log"))) {
+            bfs::recursive_directory_iterator end;
+            for (bfs::recursive_directory_iterator rdit(*it); rdit != end; ++rdit) {
+				if (rdit->path().filename() == "BrowserPlusCore.log") {
                     try {
-                        std::time_t curWrite = boost::filesystem::last_write_time(*rdit);
+                        std::time_t curWrite = bfs::last_write_time(*rdit);
                         if (curWrite > lastWrite)
                         {
                             curWrite = lastWrite;
                             logDir = rdit->path();
                             logDir.remove_filename();
                         }
-                    } catch (const bp::file::tFileSystemError& e) {
+                    } catch (const bfs::filesystem_error& e) {
                         // error reading timestamp of this file!  if no other
                         // BrowserPlusCore.log files have been found, we'll
                         // assume this is our guy.
@@ -221,7 +222,7 @@ la::util::getLogfilePaths(bplus::List & paths)
                     }
                 }
             }
-        } catch (const bp::file::tFileSystemError&) {
+        } catch (const bfs::filesystem_error&) {
             return std::string("unable to iterate thru platform version dir");
         }
     }
@@ -233,20 +234,16 @@ la::util::getLogfilePaths(bplus::List & paths)
     // d. now we've got what we're reasonably sure is the current logfile directory, lets'
     //    add all .log files to the output parameter
     {
-        bp::file::tDirIter di;
         try {
-            bp::file::tDirIter end;
-            bp::file::tString logExt = bp::file::nativeFromUtf8(".log");
-            for (bp::file::tDirIter it(logDir); it != end; ++it)
-            {
-                if (bp::file::isRegularFile(it->path())) {
-                    if (boost::filesystem::extension(*it).compare(logExt) == 0) {
-                        bp::file::Path p(it->path());
-                        paths.append(new bplus::Path(p.externalUtf8()));
+            bfs::directory_iterator end;
+            for (bfs::directory_iterator it(logDir); it != end; ++it) {
+                if (bpf::isRegularFile(it->path())) {
+                    if (it->path().extension().string() == ".log") {
+                        paths.append(new bplus::Path(bpf::nativeUtf8String(it->path())));
                     }
                 }
             }
-        } catch (const bp::file::tFileSystemError&) {
+        } catch (const bfs::filesystem_error&) {
             return std::string("unable to iterate thru plugin writable dir");
         }
     }
@@ -260,7 +257,7 @@ std::string
 la::util::getServiceLogfilePaths(const std::string& service,
                                  bplus::List& paths)
 {
-    bp::file::Path coreletDataDir;
+    bfs::path coreletDataDir;
 #ifdef WINDOWS
     bool isVistaOrLater = (PlatformVersion().compare("6") >= 0);
     if (isVistaOrLater) {
@@ -294,8 +291,8 @@ la::util::getServiceLogfilePaths(const std::string& service,
     }
 
     // append Yahoo!/BrowserPlus/CoreletData/<service>
-    coreletDataDir /= bp::file::Path("Yahoo!/BrowserPlus/CoreletData") / service;
-    if (!bp::file::isDirectory(coreletDataDir)) {
+    coreletDataDir /= bfs::path("Yahoo!/BrowserPlus/CoreletData") / service;
+    if (!bpf::isDirectory(coreletDataDir)) {
         return std::string("");
     }
     
@@ -304,45 +301,42 @@ la::util::getServiceLogfilePaths(const std::string& service,
     //    well formed major versions, and we'll follow up with a pass to find *.log
     //    inside those directories.  In case there's multiple such log files, the parent
     //    of the newest created logfile wins
-    std::list<bp::file::Path> versionDirs;
+    std::list<bfs::path> versionDirs;
     {
-        bp::file::tDirIter di;
         try {
-            bp::file::tDirIter end;
-            for (bp::file::tDirIter it(coreletDataDir); it != end; ++it) {
+            bfs::directory_iterator end;
+            for (bfs::directory_iterator it(coreletDataDir); it != end; ++it) {
                 bplus::service::Version v;
-				if (v.parse(bp::file::Path(it->filename()).externalUtf8()) 
+				if (v.parse(it->path().filename().string())
                     && v.majorVer() != -1 && v.minorVer() == -1
                     && v.microVer() == -1) {
                     versionDirs.push_back(it->path());
                 }
             }
-        } catch (const bp::file::tFileSystemError&) {
+        } catch (const bfs::filesystem_error&) {
             return std::string("unable to iterate thru CoreletData dir for service ") + service;
         }
     }
     
     // c. now that we've got the version directories, find the one with the most recent
     //    log file
-    bp::file::tString logExt = bp::file::nativeFromUtf8(".log");
-    bp::file::Path logDir;
+    bfs::path logDir;
     std::time_t lastWrite = 0;
 
-    std::list<bp::file::Path>::const_iterator it;
+    std::list<bfs::path>::const_iterator it;
     for (it = versionDirs.begin(); it != versionDirs.end(); it++) {
-        bp::file::tRecursiveDirIter di;
         try {
-            bp::file::tRecursiveDirIter end;
-            for (bp::file::tRecursiveDirIter rdit(*it); rdit != end; ++rdit) {
-                if (!rdit->path().extension().compare(logExt)) {
+            bfs::recursive_directory_iterator end;
+            for (bfs::recursive_directory_iterator rdit(*it); rdit != end; ++rdit) {
+                if (rdit->path().extension().string() == ".log") {
                     try {
-                        std::time_t curWrite = boost::filesystem::last_write_time(*rdit);
+                        std::time_t curWrite = bfs::last_write_time(*rdit);
                         if (curWrite > lastWrite) {
                             curWrite = lastWrite;
                             logDir = rdit->path();
                             logDir.remove_filename();
                         }
-                    } catch (const bp::file::tFileSystemError& e) {
+                    } catch (const bfs::filesystem_error& e) {
                         // error reading timestamp of this file!  if no other
                         // .log files have been found, we'll
                         // assume this is our guy.
@@ -353,7 +347,7 @@ la::util::getServiceLogfilePaths(const std::string& service,
                     }
                 }
             }
-        } catch (const bp::file::tFileSystemError&) {
+        } catch (const bfs::filesystem_error&) {
             return std::string("unable to iterate thru service version dir");
         }
     }
@@ -365,19 +359,17 @@ la::util::getServiceLogfilePaths(const std::string& service,
     // d. now we've got what we're reasonably sure is the current logfile directory, lets'
     //    add all .log files to the output parameter
     {
-        bp::file::tDirIter di;
         try {
-            bp::file::tDirIter end;
-            for (bp::file::tDirIter it(logDir); it != end; ++it)
+            bfs::directory_iterator end;
+            for (bfs::directory_iterator it(logDir); it != end; ++it)
             {
-                if (bp::file::isRegularFile(it->path())) {
-                    if (!it->path().extension().compare(logExt)) {
-                        bp::file::Path p(it->path());
-                        paths.append(new bplus::Path(p.externalUtf8()));
+                if (bpf::isRegularFile(it->path())) {
+                    if (it->path().extension().string() == ".log") {
+                        paths.append(new bplus::Path(bpf::nativeUtf8String(it->path())));
                     }
                 }
             }
-        } catch (const bp::file::tFileSystemError&) {
+        } catch (const bfs::filesystem_error&) {
             return std::string("unable to iterate thru service data dir");
         }
     }
