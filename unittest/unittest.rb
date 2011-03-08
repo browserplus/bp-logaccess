@@ -45,40 +45,48 @@ class TestLogAccess < Test::Unit::TestCase
   def test_bpnpapi_1
     BrowserPlus.run(@service, @providerDir, nil, nil, @urlLocal) { |s|
       x = s.get()
-      x = x[0].split('2')
-      want = ENV["HOME"] + "/Library/Application Support/Yahoo!/BrowserPlus/"
-      got = x[0]
-      assert_equal(want, got)
+      if x.size > 0
+        x = x[0].split('2')
+        want = ENV["HOME"] + "/Library/Application Support/Yahoo!/BrowserPlus/"
+        got = x[0]
+        assert_equal(want, got)
+      end
     }
   end
 
   def test_bpnpapi_2
     BrowserPlus.run(@service, @providerDir, nil, nil, @urlLocal) { |s|
       x = s.get()
-      x = x[1].split('/')
-      want = "bpnpapi.log"
-      got = x[x.size() - 1]
-      assert_equal(want, got)
+      if x.size > 0
+        x = x[1].split('/')
+        want = "bpnpapi.log"
+        got = x[x.size() - 1]
+        assert_equal(want, got)
+      end
     }
   end
 
   def test_BrowserPlusCore_1
     BrowserPlus.run(@service, @providerDir, nil, nil, @urlLocal) { |s|
       x = s.get()
-      x = x[0].split('2')
-      want = ENV["HOME"] + "/Library/Application Support/Yahoo!/BrowserPlus/"
-      got = x[0]
-      assert_equal(want, got)
+      if x.size > 0
+        x = x[0].split('2')
+        want = ENV["HOME"] + "/Library/Application Support/Yahoo!/BrowserPlus/"
+        got = x[0]
+        assert_equal(want, got)
+      end
     }
   end
 
   def test_BrowserPlusCore_2
     BrowserPlus.run(@service, @providerDir, nil, nil, @urlLocal) { |s|
       x = s.get()
-      x = x[0].split('/')
-      want = "BrowserPlusCore.log"
-      got = x[x.size() - 1]
-      assert_equal(want, got)
+      if x.size > 0
+        x = x[0].split('/')
+        want = "BrowserPlusCore.log"
+        got = x[x.size() - 1]
+        assert_equal(want, got)
+      end
     }
   end
 
