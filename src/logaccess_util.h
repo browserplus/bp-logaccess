@@ -19,20 +19,21 @@
  * Contributor(s): 
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef __LA_UTIL_HH__
-#define __LA_UTIL_HH__
+#ifndef __LOGACCESS_UTIL_H__
+#define __LOGACCESS_UTIL_H__
 
 #include "bputil/bptypeutil.h"
 
-namespace la { namespace util {
+namespace logaccess {
+namespace util {
 
 // get a list paths pointing at current logfiles
-std::string getLogfilePaths(bplus::List & paths);
+std::string getLogfilePaths(bplus::List& paths);
 
 // get a list paths pointing at current logfiles for a service
-std::string getServiceLogfilePaths(const std::string& service,
-                                   bplus::List & paths);
+std::string getServiceLogfilePaths(const std::string& service, bplus::List& paths);
 
-} }
+}
+}
 
 #endif

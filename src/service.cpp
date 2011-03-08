@@ -19,147 +19,103 @@
  * Contributor(s): 
  * ***** END LICENSE BLOCK ***** */
 
-#include "la_util.hh"
 #include "bpservice/bpservice.h"
-#include "bpservice/bpcallback.h"
-#include "bp-file/bpfile.h"
 #include "bputil/bpurl.h"
-
-#include <map>
-
-#if defined(WIN32)
-#include <windows.h>
-#endif
-
-using namespace std;
-using namespace bp::file;
-using namespace bplus::service;
-namespace bfs = boost::filesystem;
+#include "logaccess_util.h"
 
 // our service
-class LogAccess : public Service
-{
+class LogAccess : public bplus::service::Service {
 public:
     BP_SERVICE(LogAccess);
-    
-    LogAccess() : Service() {
-    }
-    ~LogAccess() {
-    }
-
-    void get(const Transaction& tran, const bplus::Map& args);
-    void getServiceLogs(const Transaction& tran,
-                        const bplus::Map& args);
+    LogAccess() : bplus::service::Service() {}
+    ~LogAccess() {}
+public:
+    void get(const bplus::service::Transaction& tran, const bplus::Map& args);
+    void getServiceLogs(const bplus::service::Transaction& tran, const bplus::Map& args);
 };
 
-BP_SERVICE_DESC(LogAccess, "LogAccess", "1.1.0",
+BP_SERVICE_DESC(LogAccess, "LogAccess", "1.2.0",
                 "Lets you get file handles for BrowserPlus log files "
                 "from a webpage.")
-
 ADD_BP_METHOD(LogAccess, get,
               "Returns a list in \"files\" of filehandles associated "
               "with BrowserPlus logfiles.")
-
 ADD_BP_METHOD(LogAccess, getServiceLogs,
               "Returns a list in \"files\" of filehandles associated "
               "with BrowserPlus service logfiles.")
-
 ADD_BP_METHOD_ARG(getServiceLogs, "services", List, true,
                   "A list of service names whose logs are fetched.")
-
 END_BP_SERVICE_DESC
 
-
-static bool checkWhitelist(const std::string & sUrl) 
-{
+static bool
+checkWhitelist(const std::string& sUrl) {
     bplus::url::Url pUrl;
     if (!pUrl.parse(sUrl)) {
         return false;
     }
-    
     if (pUrl.scheme() != "http" && pUrl.scheme() != "https") {
         return false;
     }
     std::vector<std::string> whitelist;
+    whitelist.push_back("yahoo.com");    
     whitelist.push_back("browserplus.org");
     whitelist.push_back("browserpl.us");
-    whitelist.push_back("yahoo.com");    
-
-    for (unsigned int i = 0; i < whitelist.size(); i++) {
-        if (whitelist[i].length() > pUrl.host().length()) {
+    whitelist.push_back("localhost");
+    for (std::vector<std::string>::const_iterator i = whitelist.begin(); i != whitelist.end(); i++) {
+        if (i->length() > pUrl.host().length()) {
             continue;
         }
-
         // if the hostname is larger than the whitelist entry it must
         // have a separator (so suckbrowserplus.org isn't whitelisted
         // for browserplus.org entry)
-        if (whitelist[i].length() < pUrl.host().length() &&
-            '.' != pUrl.host()[pUrl.host().length() - whitelist[i].length() - 1])
-        {
+        if (i->length() < pUrl.host().length() &&
+            '.' != pUrl.host()[pUrl.host().length() - i->length() - 1]) {
             continue;
         }
-        
-        if (!pUrl.host().substr(pUrl.host().length() - whitelist[i].length(),
-                                whitelist[i].length()).compare(whitelist[i]))
-        {
+        if (!pUrl.host().substr(pUrl.host().length() - i->length(),
+                                i->length()).compare(*i)) {
             return true;
         }
     }
-
     return false;
 }
 
-
 void
-LogAccess::get(const Transaction& tran, 
-                const bplus::Map& args)
-{
-    std::string error;
-    bplus::List paths;
-
+LogAccess::get(const bplus::service::Transaction& tran, const bplus::Map& args) {
     if (!checkWhitelist(context("uri")) ) {
         tran.error("bp.permissionDenied", NULL);
-    } else {
-        error = la::util::getLogfilePaths(paths);
-
-        if (!error.empty()) {
-            tran.error("bp.couldntGetLogs", error.c_str());
-        } else {
-            tran.complete(paths);
-        }
+        return;
     }
+    bplus::List paths;
+    std::string error = logaccess::util::getLogfilePaths(paths);
+    if (!error.empty()) {
+        tran.error("bp.couldntGetLogs", error.c_str());
+        return;
+    }
+    tran.complete(paths);
 }
 
-
 void
-LogAccess::getServiceLogs(const Transaction& tran, 
-                          const bplus::Map& args)
-{
-    std::string error;
-    bplus::List paths;
-
+LogAccess::getServiceLogs(const bplus::service::Transaction& tran, const bplus::Map& args) {
     if (!checkWhitelist(context("uri")) ) {
         tran.error("bp.permissionDenied", NULL);
-    } else {
-        const bplus::List* serviceList = NULL;
-        if (!args.getList("services", serviceList)) {
-            tran.error("bp.couldntGetLogs", 
-                       "required services parameter missing");
-            return;
-        }
-
-        for (unsigned int i = 0; i < serviceList->size(); i++) {
-            const bplus::String* s =
-                dynamic_cast<const bplus::String*>(serviceList->value(i));
-            if (s) {
-                error = la::util::getServiceLogfilePaths(s->value(), paths);
-                if (!error.empty()) {
-                    tran.error("bp.couldntGetLogs", error.c_str());
-                    return;
-                }
+        return;
+    }
+    const bplus::List* serviceList = NULL;
+    if (!args.getList("services", serviceList)) {
+        tran.error("bp.couldntGetLogs", "required services parameter missing");
+        return;
+    }
+    bplus::List paths;
+    for (unsigned int i = 0; i < serviceList->size(); i++) {
+        const bplus::String* s = dynamic_cast<const bplus::String*>(serviceList->value(i));
+        if (s) {
+            std::string error = logaccess::util::getServiceLogfilePaths(s->value(), paths);
+            if (!error.empty()) {
+                tran.error("bp.couldntGetLogs", error.c_str());
+                return;
             }
         }
-
-        tran.complete(paths);
     }
+    tran.complete(paths);
 }
