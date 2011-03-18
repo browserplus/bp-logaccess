@@ -43,7 +43,7 @@ class TestLogAccess < Test::Unit::TestCase
   # BrowserPlus.LogAccess.get({params}, function{}())
   # Returns a list in "files" of filehandles associated with BrowserPlus logfiles.
   def test_bpnpapi_1
-    BrowserPlus.run(@service, @providerDir, nil, nil, @urlLocal) { |s|
+    BrowserPlus.run(@service, @providerDir, nil, nil, false, @urlLocal) { |s|
       x = s.get()
       if x.size > 0
         x = x[0].split('2')
@@ -55,7 +55,7 @@ class TestLogAccess < Test::Unit::TestCase
   end
 
   def test_bpnpapi_2
-    BrowserPlus.run(@service, @providerDir, nil, nil, @urlLocal) { |s|
+    BrowserPlus.run(@service, @providerDir, nil, nil, false, @urlLocal) { |s|
       x = s.get()
       if x.size > 0
         x = x[1].split('/')
@@ -67,7 +67,7 @@ class TestLogAccess < Test::Unit::TestCase
   end
 
   def test_BrowserPlusCore_1
-    BrowserPlus.run(@service, @providerDir, nil, nil, @urlLocal) { |s|
+    BrowserPlus.run(@service, @providerDir, nil, nil, false, @urlLocal) { |s|
       x = s.get()
       if x.size > 0
         x = x[0].split('2')
@@ -79,7 +79,7 @@ class TestLogAccess < Test::Unit::TestCase
   end
 
   def test_BrowserPlusCore_2
-    BrowserPlus.run(@service, @providerDir, nil, nil, @urlLocal) { |s|
+    BrowserPlus.run(@service, @providerDir, nil, nil, false, @urlLocal) { |s|
       x = s.get()
       if x.size > 0
         x = x[0].split('/')
@@ -91,7 +91,7 @@ class TestLogAccess < Test::Unit::TestCase
   end
 
   def test_fakeurl
-    BrowserPlus.run(@service, @providerDir, nil, nil, @urlFake) { |s|
+    BrowserPlus.run(@service, @providerDir, nil, nil, false, @urlFake) { |s|
       assert_raise(RuntimeError) { x = s.get() }
     }
   end
