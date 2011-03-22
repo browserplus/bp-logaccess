@@ -22,6 +22,9 @@
 #include "logaccess_util.h"
 #include "bp-file/bpfile.h"
 #include "bpservice/bpserviceversion.h"
+//#include "bpserviceapi/bpcfunctions.h"
+#include "bpservice/bpservice.h"
+#include "bpservice/bpcallback.h"
 #include <list>
 
 #ifdef WINDOWS
@@ -176,6 +179,12 @@ logaccess::util::getLogfilePaths(bplus::List& paths) {
         try {
             boost::filesystem::recursive_directory_iterator end;
             for (boost::filesystem::recursive_directory_iterator rdit(*it); rdit != end; ++rdit) {
+                // save off the first path, in case platform was never run.
+                // we'll only hit this in build machine scenarios.
+                if (logDir_backup.empty()) {
+                    logDir_backup = rdit->path();
+                    logDir_backup.remove_filename();
+                }
                 if (rdit->path().filename() == "BrowserPlusCore.log") {
                     try {
                         std::time_t curWrite = boost::filesystem::last_write_time(*rdit);
@@ -184,7 +193,7 @@ logaccess::util::getLogfilePaths(bplus::List& paths) {
                             logDir = rdit->path();
                             logDir.remove_filename();
                         }
-                    } catch (const boost::filesystem::filesystem_error& e) {
+                    } catch (const boost::filesystem::filesystem_error& /*e*/) {
                         // error reading timestamp of this file!  if no other
                         // BrowserPlusCore.log files have been found, we'll
                         // assume this is our guy.
@@ -202,7 +211,7 @@ logaccess::util::getLogfilePaths(bplus::List& paths) {
                             logDir_backup = rdit->path();
                             logDir_backup.remove_filename();
                         }
-                    } catch (const boost::filesystem::filesystem_error& e) {
+                    } catch (const boost::filesystem::filesystem_error& /*e*/) {
                         // error reading timestamp of this file!  if no other
                         // BrowserPlus.config files have been found, we'll
                         // assume this is our guy.
@@ -213,7 +222,7 @@ logaccess::util::getLogfilePaths(bplus::List& paths) {
                     }
                 }
             }
-        } catch (const boost::filesystem::filesystem_error& e) {
+        } catch (const boost::filesystem::filesystem_error& /*e*/) {
             return std::string("unable to iterate thru platform version dir");
         }
     }
@@ -234,7 +243,7 @@ logaccess::util::getLogfilePaths(bplus::List& paths) {
                 }
             }
         }
-    } catch (const boost::filesystem::filesystem_error& e) {
+    } catch (const boost::filesystem::filesystem_error& /*e*/) {
         return std::string("unable to iterate thru plugin writable dir");
     }
     // success!
@@ -293,7 +302,7 @@ logaccess::util::getServiceLogfilePaths(const std::string& service, bplus::List&
                 versionDirs.push_back(it->path());
             }
         }
-    } catch (const boost::filesystem::filesystem_error& e) {
+    } catch (const boost::filesystem::filesystem_error& /*e*/) {
         return std::string("unable to iterate thru CoreletData dir for service ") + service;
     }
     // c. now that we've got the version directories, find the one with the most recent
@@ -312,7 +321,7 @@ logaccess::util::getServiceLogfilePaths(const std::string& service, bplus::List&
                             logDir = rdit->path();
                             logDir.remove_filename();
                         }
-                    } catch (const boost::filesystem::filesystem_error& e) {
+                    } catch (const boost::filesystem::filesystem_error& /*e*/) {
                         // error reading timestamp of this file!  if no other
                         // .log files have been found, we'll
                         // assume this is our guy.
@@ -323,7 +332,7 @@ logaccess::util::getServiceLogfilePaths(const std::string& service, bplus::List&
                     }
                 }
             }
-        } catch (const boost::filesystem::filesystem_error& e) {
+        } catch (const boost::filesystem::filesystem_error& /*e*/) {
             return std::string("unable to iterate thru service version dir");
         }
     }
@@ -341,7 +350,7 @@ logaccess::util::getServiceLogfilePaths(const std::string& service, bplus::List&
                 }
             }
         }
-    } catch (const boost::filesystem::filesystem_error& e) {
+    } catch (const boost::filesystem::filesystem_error& /*e*/) {
         return std::string("unable to iterate thru service data dir");
     }
     // success!
