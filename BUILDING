@@ -1,10 +1,10 @@
 how to build:
  
  git submodule init
- git submodule update
- cd externals && ruby build.rb && cd ..
+ git submodule update --recursive
+ cd external && ruby build.rb && cd ..
  rm -rf build && mkdir build && cd build
- cmake ../src (cmake -G "Visual Studio 9 2008" .. on Windows)
+ cmake ../src
  make (devenv LogAccessService.sln on Windows)
  cd test && ruby ./runtests.rb && cd ..
  
