@@ -34,7 +34,7 @@ public:
     void getServiceLogs(const bplus::service::Transaction& tran, const bplus::Map& args);
 };
 
-BP_SERVICE_DESC(LogAccess, "LogAccess", "1.2.0",
+BP_SERVICE_DESC(LogAccess, "LogAccess", "1.2.1",
                 "Lets you get file handles for BrowserPlus log files "
                 "from a webpage.")
 ADD_BP_METHOD(LogAccess, get,
