@@ -239,7 +239,7 @@ logaccess::util::getLogfilePaths(bplus::List& paths) {
         for (boost::filesystem::directory_iterator it(logDir); it != end; ++it) {
             if (bp::file::isRegularFile(it->path())) {
                 if (it->path().extension().string() == ".log") {
-                    paths.append(new bplus::Path(bp::file::nativeUtf8String(it->path())));
+                    paths.append(new bplus::Path(bp::file::nativeString(it->path())));
                 }
             }
         }
@@ -346,7 +346,7 @@ logaccess::util::getServiceLogfilePaths(const std::string& service, bplus::List&
         for (boost::filesystem::directory_iterator it(logDir); it != end; ++it) {
             if (bp::file::isRegularFile(it->path())) {
                 if (it->path().extension().string() == ".log") {
-                    paths.append(new bplus::Path(bp::file::nativeUtf8String(it->path())));
+                    paths.append(new bplus::Path(bp::file::nativeString(it->path())));
                 }
             }
         }
