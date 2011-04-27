@@ -48,7 +48,7 @@ ADD_BP_METHOD_ARG(getServiceLogs, "services", List, true,
 END_BP_SERVICE_DESC
 
 static bool
-checkWhitelist(const bplus::tPathString& sUrl) {
+checkWhitelist(const std::string& sUrl) {
     bplus::url::Url pUrl;
     if (!pUrl.parse(sUrl)) {
         return false;
@@ -56,12 +56,12 @@ checkWhitelist(const bplus::tPathString& sUrl) {
     if (pUrl.scheme() != "http" && pUrl.scheme() != "https") {
         return false;
     }
-    std::vector<bplus::tPathString> whitelist;
+    std::vector<std::string> whitelist;
     whitelist.push_back("yahoo.com");    
     whitelist.push_back("browserplus.org");
     whitelist.push_back("browserpl.us");
     whitelist.push_back("localhost");
-    for (std::vector<bplus::tPathString>::const_iterator i = whitelist.begin(); i != whitelist.end(); i++) {
+    for (std::vector<std::string>::const_iterator i = whitelist.begin(); i != whitelist.end(); i++) {
         if (i->length() > pUrl.host().length()) {
             continue;
         }
