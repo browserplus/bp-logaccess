@@ -34,7 +34,7 @@ public:
     void getServiceLogs(const bplus::service::Transaction& tran, const bplus::Map& args);
 };
 
-BP_SERVICE_DESC(LogAccess, "LogAccess", "1.2.1",
+BP_SERVICE_DESC(LogAccess, "LogAccess", "1.3.0",
                 "Lets you get file handles for BrowserPlus log files "
                 "from a webpage.")
 ADD_BP_METHOD(LogAccess, get,
@@ -48,7 +48,7 @@ ADD_BP_METHOD_ARG(getServiceLogs, "services", List, true,
 END_BP_SERVICE_DESC
 
 static bool
-checkWhitelist(const std::string& sUrl) {
+checkWhitelist(const bplus::tPathString& sUrl) {
     bplus::url::Url pUrl;
     if (!pUrl.parse(sUrl)) {
         return false;
@@ -56,12 +56,12 @@ checkWhitelist(const std::string& sUrl) {
     if (pUrl.scheme() != "http" && pUrl.scheme() != "https") {
         return false;
     }
-    std::vector<std::string> whitelist;
+    std::vector<bplus::tPathString> whitelist;
     whitelist.push_back("yahoo.com");    
     whitelist.push_back("browserplus.org");
     whitelist.push_back("browserpl.us");
     whitelist.push_back("localhost");
-    for (std::vector<std::string>::const_iterator i = whitelist.begin(); i != whitelist.end(); i++) {
+    for (std::vector<bplus::tPathString>::const_iterator i = whitelist.begin(); i != whitelist.end(); i++) {
         if (i->length() > pUrl.host().length()) {
             continue;
         }
@@ -82,7 +82,7 @@ checkWhitelist(const std::string& sUrl) {
 
 void
 LogAccess::get(const bplus::service::Transaction& tran, const bplus::Map& args) {
-    if (!checkWhitelist(context("uri")) ) {
+    if (!checkWhitelist(clientUri()) ) {
         tran.error("bp.permissionDenied", NULL);
         return;
     }
@@ -97,7 +97,7 @@ LogAccess::get(const bplus::service::Transaction& tran, const bplus::Map& args) 
 
 void
 LogAccess::getServiceLogs(const bplus::service::Transaction& tran, const bplus::Map& args) {
-    if (!checkWhitelist(context("uri")) ) {
+    if (!checkWhitelist(clientUri()) ) {
         tran.error("bp.permissionDenied", NULL);
         return;
     }
